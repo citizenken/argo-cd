@@ -394,6 +394,7 @@ export interface AuthSettings {
     };
     plugins: Plugin[];
     userLoginsDisabled: boolean;
+    workflowsUrl: string;
 }
 
 export interface UserInfo {

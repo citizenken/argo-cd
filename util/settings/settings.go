@@ -40,6 +40,8 @@ type ArgoCDSettings struct {
 	// URL is the externally facing URL users will visit to reach Argo CD.
 	// The value here is used when configuring SSO. Omitting this value will disable SSO.
 	URL string `json:"url,omitempty"`
+	// WorkflowsURL is the externally facing URL for Argo Workflows
+	WorkflowsURL string `json:"workflowsUrl,omitempty"`
 	// Indicates if status badge is enabled or not.
 	StatusBadgeEnabled bool `json:"statusBadgeEnable"`
 	// DexConfig contains portions of a dex config yaml
@@ -161,6 +163,8 @@ const (
 	settingServerPrivateKey = "tls.key"
 	// settingURLKey designates the key where Argo CD's external URL is set
 	settingURLKey = "url"
+	// settingURLKey designates the key where Argo Workflows external URL is set
+	settingWorkflowsURLKey = "workflowsUrl"
 	// repositoriesKey designates the key where ArgoCDs repositories list is set
 	repositoriesKey = "repositories"
 	// repositoryCredentialsKey designates the key where ArgoCDs repositories credentials list is set
@@ -661,6 +665,8 @@ func updateSettingsFromConfigMap(settings *ArgoCDSettings, argoCDCM *apiv1.Confi
 	settings.DexConfig = argoCDCM.Data[settingDexConfigKey]
 	settings.OIDCConfigRAW = argoCDCM.Data[settingsOIDCConfigKey]
 	settings.URL = argoCDCM.Data[settingURLKey]
+	log.Infof("************** %v", argoCDCM.Data[settingWorkflowsURLKey])
+	settings.WorkflowsURL = argoCDCM.Data[settingWorkflowsURLKey]
 	settings.KustomizeBuildOptions = argoCDCM.Data[kustomizeBuildOptionsKey]
 	settings.StatusBadgeEnabled = argoCDCM.Data[statusBadgeEnabledKey] == "true"
 	settings.AnonymousUserEnabled = argoCDCM.Data[anonymousUserEnabledKey] == "true"
@@ -719,6 +725,11 @@ func (mgr *SettingsManager) SaveSettings(settings *ArgoCDSettings) error {
 			argoCDCM.Data[settingURLKey] = settings.URL
 		} else {
 			delete(argoCDCM.Data, settingURLKey)
+		}
+		if settings.WorkflowsURL != "" {
+			argoCDCM.Data[settingWorkflowsURLKey] = settings.WorkflowsURL
+		} else {
+			delete(argoCDCM.Data, settingWorkflowsURLKey)
 		}
 		if settings.DexConfig != "" {
 			argoCDCM.Data[settingDexConfigKey] = settings.DexConfig

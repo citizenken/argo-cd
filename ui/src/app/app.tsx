@@ -31,7 +31,7 @@ const routes: {[path: string]: {component: React.ComponentType<RouteComponentPro
 
 const navItems = [
     {
-        title: 'Manage your applications, and diagnose health problems.',
+        title: 'Manage your applications, and diagnose health problems',
         path: '/applications',
         iconClassName: 'argo-icon-application'
     },
@@ -46,7 +46,7 @@ const navItems = [
         iconClassName: 'fa fa-user-circle'
     },
     {
-        title: 'Read the documentation, and get help and assistance.',
+        title: 'Read the documentation, and get help and assistance',
         path: '/help',
         iconClassName: 'argo-icon-docs'
     }

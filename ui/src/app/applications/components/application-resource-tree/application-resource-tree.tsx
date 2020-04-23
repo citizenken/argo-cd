@@ -5,13 +5,14 @@ import * as React from 'react';
 
 import * as models from '../../../shared/models';
 
-import {EmptyState} from '../../../shared/components';
+import {EmptyState, DataLoader} from '../../../shared/components';
 import {Consumer} from '../../../shared/context';
 import {ApplicationURLs} from '../application-urls';
 import {ResourceIcon} from '../resource-icon';
 import {ResourceLabel} from '../resource-label';
-import {ComparisonStatusIcon, getAppOverridesCount, HealthStatusIcon, isAppNode, NodeId, nodeKey} from '../utils';
+import {ComparisonStatusIcon, getAppOverridesCount, HealthStatusIcon, isAppNode, isWorkflowNode, NodeId, nodeKey} from '../utils';
 import {NodeUpdateAnimation} from './node-update-animation';
+import {services} from '../../../shared/services';
 
 function treeNodeKey(node: NodeId & {uid?: string}) {
     return node.uid || nodeKey(node);
@@ -199,6 +200,7 @@ function renderResourceNode(props: ApplicationResourceTreeProps, id: string, nod
         healthState = node.health;
     }
     const appNode = isAppNode(node);
+    const workflowNode = isWorkflowNode(node);
     const rootNode = !node.root;
     return (
         <div
@@ -236,6 +238,16 @@ function renderResourceNode(props: ApplicationResourceTreeProps, id: string, nod
                                 </a>
                             )}
                         </Consumer>
+                    )}
+                    {workflowNode && !rootNode && (
+                        <DataLoader load={() => services.authService.settings()}>
+                            {settings =>
+                            (settings.workflowsUrl && (
+                                <a href={`${settings.workflowsUrl}/workflows/${node.namespace}/${node.name}`} target="_blank" title='Open workflow'>
+                                <i className='fa fa-external-link-alt' />
+                            </a>
+                            ))}
+                        </DataLoader>
                     )}
                     <ApplicationURLs urls={rootNode ? props.app.status.summary.externalURLs : node.networkingInfo && node.networkingInfo.externalURLs} />
                 </span>

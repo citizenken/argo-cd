@@ -395,6 +395,10 @@ export function isAppNode(node: appModels.ResourceNode) {
     return node.kind === 'Application' && node.group === 'argoproj.io';
 }
 
+export function isWorkflowNode(node: appModels.ResourceNode) {
+    return node.kind === 'Workflow' && node.group === 'argoproj.io';
+}
+
 export function getAppOverridesCount(app: appModels.Application) {
     if (app.spec.source.ksonnet && app.spec.source.ksonnet.parameters) {
         return app.spec.source.ksonnet.parameters.length;

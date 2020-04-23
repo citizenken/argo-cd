@@ -70,6 +70,7 @@ func (s *Server) Get(ctx context.Context, q *settingspkg.SettingsQuery) (*settin
 
 	set := settingspkg.Settings{
 		URL:                argoCDSettings.URL,
+		WorkflowsURL:       argoCDSettings.WorkflowsURL,
 		AppLabelKey:        appInstanceLabelKey,
 		ResourceOverrides:  overrides,
 		StatusBadgeEnabled: argoCDSettings.StatusBadgeEnabled,
