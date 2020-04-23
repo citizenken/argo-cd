@@ -7,16 +7,18 @@ import (
 	"testing"
 
 	"github.com/argoproj/argo-cd/errors"
+	"github.com/argoproj/argo-cd/pkg/apis/application"
 	"github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1"
 
 	"github.com/ghodss/yaml"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 const (
-	testRolloutYAML = `apiVersion: argoproj.io/v1alpha1
-kind: Rollout
+	someCRDYaml = `apiVersion: some.io/v1alpha1
+kind: TestCRD
 metadata:
   name: canary-demo
 spec:
@@ -26,7 +28,7 @@ spec:
         app: canary-demo
     spec:
       containers:
-      - image: argoproj/rollouts-demo:yellow
+      - image: something:latest
         name: canary-demo
         volumeMounts:
         - name: config-volume
@@ -36,6 +38,7 @@ spec:
           requests:
             cpu: 2000m
             memory: 32Mi`
+	crdGroupKind = "some.io/TestCRD"
 )
 
 func mustUnmarshalYAML(yamlStr string) *unstructured.Unstructured {
@@ -45,6 +48,7 @@ func mustUnmarshalYAML(yamlStr string) *unstructured.Unstructured {
 	return un
 }
 
+// nolint:unparam
 func nestedSliceMap(obj map[string]interface{}, i int, path ...string) (map[string]interface{}, error) {
 	items, ok, err := unstructured.NestedSlice(obj, path...)
 	if err != nil {
@@ -65,7 +69,7 @@ func nestedSliceMap(obj map[string]interface{}, i int, path ...string) (map[stri
 
 func TestNormalize_MapField(t *testing.T) {
 	normalizer, err := NewKnownTypesNormalizer(map[string]v1alpha1.ResourceOverride{
-		"argoproj.io/Rollout": {
+		crdGroupKind: {
 			KnownTypeFields: []v1alpha1.KnownTypeField{{
 				Type:  "core/v1/PodSpec",
 				Field: "spec.template.spec",
@@ -76,7 +80,7 @@ func TestNormalize_MapField(t *testing.T) {
 		return
 	}
 
-	rollout := mustUnmarshalYAML(testRolloutYAML)
+	rollout := mustUnmarshalYAML(someCRDYaml)
 
 	err = normalizer.Normalize(rollout)
 	if !assert.NoError(t, err) {
@@ -106,9 +110,9 @@ func TestNormalize_MapField(t *testing.T) {
 }
 
 func TestNormalize_FieldInNestedSlice(t *testing.T) {
-	rollout := mustUnmarshalYAML(testRolloutYAML)
+	rollout := mustUnmarshalYAML(someCRDYaml)
 	normalizer, err := NewKnownTypesNormalizer(map[string]v1alpha1.ResourceOverride{
-		"argoproj.io/Rollout": {
+		crdGroupKind: {
 			KnownTypeFields: []v1alpha1.KnownTypeField{{
 				Type:  "core/v1/Container",
 				Field: "spec.template.spec.containers",
@@ -138,8 +142,8 @@ func TestNormalize_FieldInNestedSlice(t *testing.T) {
 }
 
 func TestNormalize_FieldInDoubleNestedSlice(t *testing.T) {
-	rollout := mustUnmarshalYAML(`apiVersion: argoproj.io/v1alpha1
-kind: Rollout
+	rollout := mustUnmarshalYAML(`apiVersion: some.io/v1alpha1
+kind: TestCRD
 metadata:
   name: canary-demo
 spec:
@@ -160,7 +164,7 @@ spec:
               cpu: 2000m
               memory: 32Mi`)
 	normalizer, err := NewKnownTypesNormalizer(map[string]v1alpha1.ResourceOverride{
-		"argoproj.io/Rollout": {
+		crdGroupKind: {
 			KnownTypeFields: []v1alpha1.KnownTypeField{{
 				Type:  "core/v1/Container",
 				Field: "spec.templates.spec.containers",
@@ -194,9 +198,9 @@ spec:
 }
 
 func TestFieldDoesNotExist(t *testing.T) {
-	rollout := mustUnmarshalYAML(testRolloutYAML)
+	rollout := mustUnmarshalYAML(someCRDYaml)
 	normalizer, err := NewKnownTypesNormalizer(map[string]v1alpha1.ResourceOverride{
-		"argoproj.io/Rollout": {
+		crdGroupKind: {
 			KnownTypeFields: []v1alpha1.KnownTypeField{{
 				Type:  "core/v1/PodSpec",
 				Field: "fieldDoesNotExist",
@@ -223,6 +227,31 @@ func TestFieldDoesNotExist(t *testing.T) {
 	}
 
 	assert.Equal(t, "2000m", cpu)
+}
+
+func TestRolloutPreConfigured(t *testing.T) {
+	normalizer, err := NewKnownTypesNormalizer(map[string]v1alpha1.ResourceOverride{})
+	if !assert.NoError(t, err) {
+		return
+	}
+	_, ok := normalizer.typeFields[schema.GroupKind{Group: application.Group, Kind: "Rollout"}]
+	assert.True(t, ok)
+}
+
+func TestOverrideKeyWithoutGroup(t *testing.T) {
+	normalizer, err := NewKnownTypesNormalizer(map[string]v1alpha1.ResourceOverride{
+		"ConfigMap": {
+			KnownTypeFields: []v1alpha1.KnownTypeField{{
+				Type:  "core/v1/PodSpec",
+				Field: "data",
+			}},
+		},
+	})
+	if !assert.NoError(t, err) {
+		return
+	}
+	_, ok := normalizer.typeFields[schema.GroupKind{Group: "", Kind: "ConfigMap"}]
+	assert.True(t, ok)
 }
 
 func TestKnownTypes(t *testing.T) {

@@ -179,6 +179,7 @@ export interface ApplicationSourceKustomize {
     namePrefix: string;
     nameSuffix: string;
     images: string[];
+    version: string;
 }
 
 export interface ApplicationSourceKsonnet {
@@ -395,6 +396,7 @@ export interface AuthSettings {
     plugins: Plugin[];
     userLoginsDisabled: boolean;
     workflowsUrl: string;
+    kustomizeVersions: string[];
 }
 
 export interface UserInfo {
@@ -577,6 +579,7 @@ export interface ProjectRole {
 export interface JwtToken {
     iat: number;
     exp: number;
+    id: string;
 }
 
 export interface GroupKind {

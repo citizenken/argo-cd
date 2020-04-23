@@ -2038,6 +2038,9 @@
           "format": "int64",
           "title": "expiresIn represents a duration in seconds"
         },
+        "id": {
+          "type": "string"
+        },
         "name": {
           "type": "string"
         }
@@ -2357,6 +2360,12 @@
         "kustomizeOptions": {
           "$ref": "#/definitions/v1alpha1KustomizeOptions"
         },
+        "kustomizeVersions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "oidcConfig": {
           "$ref": "#/definitions/clusterOIDCConfig"
         },
@@ -2433,6 +2442,9 @@
           "type": "string",
           "format": "int64",
           "title": "expiresIn represents a duration in seconds"
+        },
+        "id": {
+          "type": "string"
         },
         "project": {
           "type": "string"
@@ -3418,6 +3430,10 @@
         "nameSuffix": {
           "type": "string",
           "title": "NameSuffix is a suffix appended to resources for kustomize apps"
+        },
+        "version": {
+          "type": "string",
+          "title": "Version contains optional Kustomize version"
         }
       }
     },
@@ -3792,6 +3808,9 @@
         "iat": {
           "type": "string",
           "format": "int64"
+        },
+        "id": {
+          "type": "string"
         }
       }
     },
@@ -3842,6 +3861,10 @@
       "type": "object",
       "title": "KustomizeOptions are options for kustomize to use when building manifests",
       "properties": {
+        "binaryPath": {
+          "type": "string",
+          "title": "BinaryPath holds optional path to kustomize binary"
+        },
         "buildOptions": {
           "type": "string",
           "title": "BuildOptions is a string of build parameters to use when calling `kustomize build`"
